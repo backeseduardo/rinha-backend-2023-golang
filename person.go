@@ -48,7 +48,7 @@ func GetPerson(db *sql.DB, id string) (Pessoa, error) {
 	var nascimento time.Time
 
 	var p Pessoa
-	err := db.QueryRow(sql, id).Scan(&p.Id, &p.Apelido, &p.Nome, &nascimento, &p.Stack)
+	err := db.QueryRow(sql, id).Scan(&p.Id, &p.Apelido, &p.Nome, &nascimento, pq.Array(&p.Stack))
 
 	p.Nascimento = customDate{Time: nascimento}
 
