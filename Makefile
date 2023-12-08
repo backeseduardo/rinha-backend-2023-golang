@@ -10,7 +10,7 @@ build:
 start-up:
 	@docker-compose up --remove-orphans
 
-run:
+dev:
 	@go run cmd/web/main.go
 
 migrate:
