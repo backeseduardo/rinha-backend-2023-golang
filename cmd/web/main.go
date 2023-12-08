@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -90,32 +89,4 @@ func main() {
 			log.Println(user.Username)
 		}
 	*/
-}
-
-type user struct {
-	Username string
-}
-
-func getUsers(db *sql.DB) ([]user, error) {
-	rows, err := db.Query("SELECT username FROM users")
-	if err != nil {
-		return nil, err
-	}
-
-	defer rows.Close()
-
-	var users []user
-
-	for rows.Next() {
-		var u user
-
-		err = rows.Scan(&u.Username)
-		if err != nil {
-			continue
-		}
-
-		users = append(users, u)
-	}
-
-	return users, nil
 }
