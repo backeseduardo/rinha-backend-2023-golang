@@ -13,6 +13,9 @@ start-up:
 run:
 	@go run cmd/web/main.go
 
+migrate:
+	@$(HOME)/go/bin/migrate create -ext sql -dir database/migrations $(filter-out $@,$(MAKECMDGOALS))
+
 up:
 	@go run cmd/migrate/main.go up
 

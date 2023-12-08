@@ -41,7 +41,7 @@ func main() {
 		}
 
 		c.Header("Location", fmt.Sprintf("/pessoas/%d", id))
-		c.JSON(http.StatusCreated, gin.H{})
+		c.JSON(http.StatusCreated, gin.H{"id": id})
 	}
 
 	HandleGetPessoaById := func(c *gin.Context) {
@@ -60,7 +60,18 @@ func main() {
 	}
 
 	HandleGetPessoas := func(c *gin.Context) {
-		c.JSON(http.StatusInternalServerError, gin.H{})
+		term := c.Query("t")
+
+		p, err := rinha.GetPersonsByTerm(db, term)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, gin.H{
+				"status":  500,
+				"message": err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, p)
 	}
 
 	HandleGetContagemPessoas := func(c *gin.Context) {

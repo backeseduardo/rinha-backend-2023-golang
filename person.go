@@ -2,6 +2,8 @@ package rinha
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/lib/pq"
@@ -31,11 +33,13 @@ func (t *customDate) MarshalJSON() ([]byte, error) {
 }
 
 func InsertPerson(db *sql.DB, p *Pessoa) (id int, err error) {
-	sql := `INSERT INTO pessoas (apelido, nome, nascimento, stack)
-		VALUES ($1, $2, $3, $4)
+	sql := `INSERT INTO pessoas (apelido, nome, nascimento, stack, search_index)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id`
 
-	err = db.QueryRow(sql, p.Apelido, p.Nome, p.Nascimento.Time, pq.Array(p.Stack)).Scan(&id)
+	searchIndex := strings.ToLower(fmt.Sprintf("%s %s %s", p.Apelido, p.Nome, strings.Join(p.Stack, " ")))
+
+	err = db.QueryRow(sql, p.Apelido, p.Nome, p.Nascimento.Time, pq.Array(p.Stack), searchIndex).Scan(&id)
 
 	return id, err
 }
@@ -53,4 +57,33 @@ func GetPerson(db *sql.DB, id string) (Pessoa, error) {
 	p.Nascimento = customDate{Time: nascimento}
 
 	return p, err
+}
+
+func GetPersonsByTerm(db *sql.DB, term string) (persons []Pessoa, err error) {
+	sql := `SELECT id, apelido, nome, nascimento, stack
+		FROM pessoas
+		WHERE search_index ILIKE '%'||$1||'%'`
+
+	rows, err := db.Query(sql, term)
+	if err != nil {
+		return persons, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var nascimento time.Time
+		var p Pessoa
+
+		err = rows.Scan(&p.Id, &p.Apelido, &p.Nome, &nascimento, pq.Array(&p.Stack))
+		if err != nil {
+			return persons, err
+		}
+
+		p.Nascimento = customDate{Time: nascimento}
+
+		persons = append(persons, p)
+	}
+
+	return persons, nil
 }
