@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/backeseduardo/rinha-backend-2023-golang"
 	"github.com/backeseduardo/rinha-backend-2023-golang/database"
@@ -75,7 +76,16 @@ func main() {
 	}
 
 	HandleGetContagemPessoas := func(c *gin.Context) {
-		c.String(http.StatusOK, "1000")
+		count, err := rinha.CountPersons(db)
+		if err != nil {
+			c.JSON(http.StatusUnprocessableEntity, gin.H{
+				"status":  500,
+				"message": err.Error(),
+			})
+			return
+		}
+
+		c.String(http.StatusOK, strconv.Itoa(count))
 	}
 
 	r := gin.Default()

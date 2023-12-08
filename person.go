@@ -87,3 +87,11 @@ func GetPersonsByTerm(db *sql.DB, term string) (persons []Pessoa, err error) {
 
 	return persons, nil
 }
+
+func CountPersons(db *sql.DB) (count int, err error) {
+	sql := `SELECT COUNT(*) FROM pessoas`
+
+	err = db.QueryRow(sql).Scan(&count)
+
+	return count, err
+}
