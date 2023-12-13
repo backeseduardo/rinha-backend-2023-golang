@@ -6,11 +6,19 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/backeseduardo/rinha-backend-2023-golang"
+	"github.com/backeseduardo/rinha-backend-2023-golang/internal/person"
 	"github.com/gin-gonic/gin"
 )
 
-func NewServer() {
+type HttpServerOpts struct {
+	PersonRepository person.Repository
+}
+
+var opts *HttpServerOpts
+
+func NewServer(o *HttpServerOpts) {
+	opts = o
+
 	r := gin.Default()
 	registerRoutes(r)
 	r.Run()
@@ -28,9 +36,9 @@ func registerRoutes(r *gin.Engine) {
 	})
 }
 func HandlePostPessoas(c *gin.Context) {
-	var pessoaBody rinha.Pessoa
+	var p person.Person
 
-	err := json.NewDecoder(c.Request.Body).Decode(&pessoaBody)
+	err := json.NewDecoder(c.Request.Body).Decode(&p)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"status":  500,
@@ -39,7 +47,7 @@ func HandlePostPessoas(c *gin.Context) {
 		return
 	}
 
-	id, err := rinha.InsertPerson(&pessoaBody)
+	id, err := opts.PersonRepository.Insert(p)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"status":  500,
@@ -53,9 +61,16 @@ func HandlePostPessoas(c *gin.Context) {
 }
 
 func HandleGetPessoaById(c *gin.Context) {
-	id := c.Param("id")
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"status":  500,
+			"message": err.Error(),
+		})
+		return
+	}
 
-	p, err := rinha.GetPerson(id)
+	p, err := opts.PersonRepository.FindById(id)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"status":  500,
@@ -68,9 +83,9 @@ func HandleGetPessoaById(c *gin.Context) {
 }
 
 func HandleGetPessoas(c *gin.Context) {
-	term := c.Query("t")
+	t := c.Query("t")
 
-	p, err := rinha.GetPersonsByTerm(term)
+	p, err := opts.PersonRepository.FindByTerm(t)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"status":  500,
@@ -83,7 +98,7 @@ func HandleGetPessoas(c *gin.Context) {
 }
 
 func HandleGetContagemPessoas(c *gin.Context) {
-	count, err := rinha.CountPersons()
+	count, err := opts.PersonRepository.Count()
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"status":  500,

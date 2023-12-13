@@ -7,7 +7,7 @@ docker-up:
 	@docker-compose up --remove-orphans
 
 run:
-	@go run cmd/web/main.go
+	@go run cmd/api/main.go
 
 migrate:
 	@$(HOME)/go/bin/migrate create -ext sql -dir internal/database/migrations $(filter-out $@,$(MAKECMDGOALS))
